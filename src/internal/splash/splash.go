@@ -94,11 +94,11 @@ func releaseDC (hWnd syscall.Handle, hDC syscall.Handle) bool {
 } 
 
 const (
-  cWS_VISIBLE       = 0x10000000
-  cWS_EX_TOPMOST    = 0x00000008
-  cWS_POPUP         = 0x80000000
-  cWS_EX_TOOLWINDOW = 0x000000080
-  cWS_TABSTOP       = 0x00010000
+  WS_VISIBLE       = 0x10000000
+  WS_EX_TOPMOST    = 0x00000008
+  WS_POPUP         = 0x80000000
+  WS_EX_TOOLWINDOW = 0x000000080
+  WS_TABSTOP       = 0x00010000
 )
 
 func createWindow(className, windowName string, style, style_ext uint32, x, y, width, height uint32, parent, menu, instance syscall.Handle) (syscall.Handle, error) {
@@ -365,8 +365,8 @@ func CreateWindow(exit chan bool, pid int, splashImage string, width, height uin
   win, err = createWindow(
     className,
     "Red Alert 3",
-    cWS_EX_TOOLWINDOW | cWS_EX_TOPMOST,
-    cWS_VISIBLE | cWS_POPUP | cWS_TABSTOP,
+    WS_EX_TOOLWINDOW | WS_EX_TOPMOST,
+    WS_VISIBLE | WS_POPUP | WS_TABSTOP,
     (screenWidth - width) / 2, //center X
     (screenHeight - height) / 2, //center Y
     width,
