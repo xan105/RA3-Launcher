@@ -15,6 +15,7 @@ import(
   "os/exec"
   "syscall"
   "math/rand"
+  "time"
   "log/slog"
   "launcher/internal/regedit"
   "launcher/internal/splash"
@@ -218,5 +219,11 @@ func main(){
     }
   }
   
-  <-exit
+  select {
+    case <-exit:
+      return
+    case <-time.After(time.Second * 10):
+      slog.Warn("Timeout")
+      return
+  }
 }

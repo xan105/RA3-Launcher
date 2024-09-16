@@ -386,6 +386,7 @@ func CreateWindow(exit chan bool, pid int, splashImage string, width, height uin
     gotMessage, err := getMessage(&msg, 0, 0, 0)
     if err != nil {
       slog.Error(err.Error())
+      exit <- true
       return
     }
 
@@ -396,4 +397,5 @@ func CreateWindow(exit chan bool, pid int, splashImage string, width, height uin
       break
     }
   }
+  exit <- true
 }
