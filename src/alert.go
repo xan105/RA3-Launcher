@@ -66,4 +66,5 @@ func displayHelp(){
       windows.StringToUTF16Ptr("Red Alert 3"),
       windows.MB_OK,
     )
+  os.Exit(0)
 }
