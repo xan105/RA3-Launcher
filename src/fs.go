@@ -31,6 +31,7 @@ func readJSON(filepath string) (config Config, err error) {
   config.Keygen = true
   config.Borderless = false
   config.Splash = true
+  config.Timeout = 10
   config.SplashImage = []string{ "Launcher/splash.bmp" }
   config.Addons = []Addon{}
 

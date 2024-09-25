@@ -49,9 +49,10 @@ type Config struct {
   Version     string    `json:"version"`
   Lang        string    `json:"lang"`
   Upheaval    bool      `json:"upheaval"`
-  Keygen	    bool      `json:"keygen"`
+  Keygen      bool      `json:"keygen"`
   Borderless  bool      `json:"borderless"`
   Splash      bool      `json:"splash"`
+  Timeout     uint      `json:"timeout"`
   SplashImage []string  `json:"splash_image"`
   Addons      []Addon   `json:"addons"`
 }
@@ -222,7 +223,7 @@ func main(){
   select {
     case <-exit:
       return
-    case <-time.After(time.Second * 10):
+    case <-time.After(time.Second * time.Duration(config.Timeout)):
       slog.Warn("Timeout")
       return
   }
