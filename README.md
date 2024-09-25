@@ -120,6 +120,11 @@ Most of the orignal `RA3.exe` cmdline arguments were kept:
 - `splash?: boolean (true)`
 
   Display a splash screen while the game is loading similar to the original `RA3.exe`
+  
+- `timeout?: number (10)`
+
+  Failsafe timeout in seconds. This is mostly for the splash screen.<br/>
+  eg: There was no event dispatched from the game (Linux/Proton) or if an injected DLL crashed the game on startup. 
 
 - `splash_image?: []string (["Launcher/splash.bmp"])`
 
