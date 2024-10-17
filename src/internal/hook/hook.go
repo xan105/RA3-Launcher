@@ -16,7 +16,7 @@ var (
     kernel32 = syscall.NewLazyDLL("kernel32.dll")
     
     pVirtualAllocEx = kernel32.NewProc("VirtualAllocEx")
-    pCreateRemoThread = kernel32.NewProc("CreateRemoteThread")
+    pCreateRemoteThread = kernel32.NewProc("CreateRemoteThread")
 )
 
 func CreateRemoteThread(pid uintptr, path string) error {
@@ -52,12 +52,13 @@ func CreateRemoteThread(pid uintptr, path string) error {
   }
  
  //Writes the filename to the previously allocated space
+  lpNumberOfBytesWritten:= uintptr(0)
   err = windows.WriteProcessMemory(
     hProcess, 
     lpBaseAddress, 
-    uintptr(unsafe.Pointer(lpBuffer)), 
+    (*byte)(unsafe.Pointer(lpBuffer)),
     uintptr(len(path)*2+1),
-    uintptr(0),
+    &lpNumberOfBytesWritten,
   )
   if err != nil {
     return err
