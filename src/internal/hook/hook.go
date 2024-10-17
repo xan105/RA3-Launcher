@@ -35,17 +35,18 @@ func CreateRemoteThread(pid uintptr, path string) error {
     return err
   }
 
+  defer syscall.CloseHandle(syscall.Handle(hProcess))
+
  //Allocates virtual memory for the file path
   lpBaseAddress, _, err := pVirtualAllocEx.Call(
     uintptr(hProcess), 
     0, 
-    uintptr(len(path)*2+1),
+    uintptr((len(path) + 1) * 2),
     windows.MEM_RESERVE | windows.MEM_COMMIT, 
     windows.PAGE_EXECUTE_READWRITE,
   )
  
-  //Converts the file path to type *byte
-  //lpBuffer, err := windows.BytePtrFromString(path)
+  //Converts the file path to type LPCWSTR
   lpBuffer, err := windows.UTF16PtrFromString(path)
   if err != nil {
     return err
@@ -57,7 +58,7 @@ func CreateRemoteThread(pid uintptr, path string) error {
     hProcess, 
     lpBaseAddress, 
     (*byte)(unsafe.Pointer(lpBuffer)),
-    uintptr(len(path)*2+1),
+    uintptr((len(path) + 1) * 2),
     &lpNumberOfBytesWritten,
   )
   if err != nil {
@@ -74,7 +75,7 @@ func CreateRemoteThread(pid uintptr, path string) error {
   }
  
  //Creates a remote thread that loads the DLL triggering it
-  handle, _, err := pCreateRemoteThread.Call(
+  hThread, _, err := pCreateRemoteThread.Call(
     uintptr(hProcess), 
     0, 
     0, 
@@ -83,11 +84,11 @@ func CreateRemoteThread(pid uintptr, path string) error {
     0, 
     0,
   )
-  if handle == 0 {
+  if hThread == 0 {
     return err
   }
 
-  defer syscall.CloseHandle(syscall.Handle(handle))
+  defer syscall.CloseHandle(syscall.Handle(hThread))
   
   return nil
 }
