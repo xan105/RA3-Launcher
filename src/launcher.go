@@ -190,7 +190,7 @@ func main(){
     if !filepath.IsAbs(splashImage) {
       splashImage = filepath.Join(root, splashImage)
     }
-    go splash.CreateWindow(exit, cmd.Process.Pid, splashImage, 640, 480)
+    go splash.CreateWindow(exit, cmd.Process.Pid, splashImage)
   } else {
     go func(exit chan bool){
       exit <- true

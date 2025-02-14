@@ -7,9 +7,10 @@ found in the LICENSE file in the root directory of this source tree.
 package splash
 
 import (
-  "log/slog"
-  "syscall"
+  "os"
   "unsafe"
+  "syscall"
+  "log/slog"
 )
 
 var (
@@ -31,6 +32,7 @@ var (
   
   pGetDeviceCaps      = gdi32.NewProc("GetDeviceCaps")
   pCreatePatternBrush = gdi32.NewProc("CreatePatternBrush")
+  pGetObjectW         = gdi32.NewProc("GetObjectW")
 )
 
 const (
@@ -55,6 +57,30 @@ func createPatternBrush(hbm syscall.Handle) (syscall.Handle, error) {
   return syscall.Handle(ret), nil
 }
 
+type BITMAP struct {
+  bmType        uint32
+  bmWidth       int32
+  bmHeight      int32
+  bmWidthBytes  uint32
+  bmPlanes      uint16
+  bmBitsPixel   uint16
+  bmBits        uintptr
+}
+
+func getObject(hBitmap syscall.Handle) (BITMAP, error) {
+  var bmp BITMAP
+  
+  ret, _, err := pGetObjectW.Call(
+    uintptr(hBitmap), 
+    uintptr(unsafe.Sizeof(bmp)), 
+    uintptr(unsafe.Pointer(&bmp)),
+  )
+  if ret == 0 {
+    return bmp, err
+  }
+  return bmp, nil
+}
+
 var (
   user32 = syscall.NewLazyDLL("user32.dll")
 
@@ -72,7 +98,6 @@ var (
   pUnhookWinEvent   = user32.NewProc("UnhookWinEvent") //todo
   pGetDC            = user32.NewProc("GetDC")
   pReleaseDC        = user32.NewProc("ReleaseDC")
-  
 )
 
 func getDC(hWnd syscall.Handle) (syscall.Handle, error) {
@@ -265,12 +290,11 @@ func translateMessage(msg *tMSG) {
   pTranslateMessage.Call(uintptr(unsafe.Pointer(msg)))
 }
 
-func CreateWindow(exit chan bool, pid int, splashImage string, width, height uint32) {
+func CreateWindow(exit chan bool, pid int, splashImage string) {
   
   slog.Info("splash")
 
   className := "E39055F1-BFCB-4FB9-983F-CDC766E39B93" //Random GUID
-
   instance, err := getModuleHandle()
   if err != nil {
     slog.Error(err.Error())
@@ -327,7 +351,7 @@ func CreateWindow(exit chan bool, pid int, splashImage string, width, height uin
       slog.Error(err.Error())
       exit <- true
       return
-    }
+    } 
   //and create an HBRUSH around it using CreatePatternBrush(), and then assign that to the WNDCLASS::hbrBackground    
   hbrush, err := createPatternBrush(hbm)
     if err != nil {    
@@ -361,16 +385,31 @@ func CreateWindow(exit chan bool, pid int, splashImage string, width, height uin
   screenWidth := getDeviceCaps(hDC, HORZRES)
   screenHeight := getDeviceCaps(hDC, VERTRES)
 
+  //Get Image dimension
+  image, err:= getObject(hbm)
+  if err != nil {
+    slog.Error(err.Error())
+    exit <- true
+    return
+  }
+
+  //check process hasn't crashed since we started it
+  if _, err = os.FindProcess(pid); err != nil { 
+    slog.Error(err.Error())
+    exit <- true
+    return
+  }
+
   //create window
   win, err = createWindow(
     className,
     "Red Alert 3",
     WS_EX_TOOLWINDOW | WS_EX_TOPMOST,
     WS_VISIBLE | WS_POPUP | WS_TABSTOP,
-    (screenWidth - width) / 2, //center X
-    (screenHeight - height) / 2, //center Y
-    width,
-    height,
+    (screenWidth - uint32(image.bmWidth)) / 2, //center X
+    (screenHeight - uint32(image.bmHeight)) / 2, //center Y
+    uint32(image.bmWidth),
+    uint32(image.bmHeight),
     0,
     0,
     instance,
